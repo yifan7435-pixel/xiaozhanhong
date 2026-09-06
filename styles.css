@@ -6,3 +6,9 @@
 
 @media(max-width:680px){.header nav.mobile-open{display:flex;flex-direction:column;position:absolute;top:66px;right:18px;background:#12151a;border:1px solid #292e36;border-radius:10px;padding:14px 18px;gap:14px;z-index:60}.header nav.mobile-open a{color:#e9edf0}}
 
+
+/* 统一主题覆盖 */
+.head-login{color:#f1f3ef;border:1px solid #617d35;background:transparent;padding:8px 16px;border-radius:999px;font-size:13px;text-decoration:none;margin-right:10px;transition:all .2s}
+.head-login:hover{background:#c7f36a;color:#10130b;border-color:#c7f36a}
+.head-login:visited,.head-login:link{color:#f1f3ef}
+

@@ -2,17 +2,26 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FuckXiaoBaiHong 用户中心</title>
 <style>
-*{box-sizing:border-box}body{font-family:'Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-size:14px}
-.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:22px;width:min(360px,92vw)}
-h1{font-size:18px;margin:0 0 2px} h1 small{color:#64748b;font-weight:400;font-size:12px}
-p{margin:6px 0;color:#94a3b8;font-size:12px}
-input{width:100%;padding:8px 9px;margin:6px 0;border-radius:7px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:14px}
-button{width:100%;padding:9px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-size:14px;cursor:pointer}
-button.ghost{background:#334155;margin-top:6px}
-.key{font:16px Consolas,monospace;letter-spacing:1px;color:#22d3ee;word-break:break-all;background:#0f172a;border:1px solid #334155;border-radius:7px;padding:8px;margin:6px 0;cursor:pointer;text-align:center}
-.row{display:flex;justify-content:space-between;align-items:center;margin:4px 0}
-#st{color:#fbbf24;font-size:12px;min-height:16px;margin-top:6px}.ok{color:#4ade80}.hidden{display:none}
-a.link{color:#93c5fd;font-size:12px;display:inline-block;margin-top:4px;cursor:pointer;text-decoration:none}
+*{box-sizing:border-box}
+body{font-family:'Manrope','Noto Sans SC','Microsoft YaHei',sans-serif;background:#0a0b0e;color:#f1f3ef;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card{background:#12151a;border:1px solid #617d35;border-radius:16px;padding:26px;width:min(380px,92vw);box-shadow:0 30px 100px #0008;position:relative}
+h1{font-size:19px;letter-spacing:-.04em;margin:0 0 2px} h1 small{color:#9299a2;font-weight:400;font-size:12px;font-family:'DM Mono',monospace}
+p{margin:6px 0;color:#9299a2;font-size:12px;line-height:1.7}
+input{width:100%;padding:9px 11px;margin:6px 0;border-radius:8px;border:1px solid #292e36;background:#0a0b0e;color:#f1f3ef;font-size:14px;outline:0}
+input:focus{border-color:#c7f36a}
+button{width:100%;padding:10px;border:0;border-radius:8px;cursor:pointer;font:inherit;font-weight:700}
+button.primary{background:#c7f36a;color:#10130b}
+button.primary:hover{background:#e0ff8c}
+button.ghost{background:transparent;border:1px solid #292e36;color:#f1f3ef;margin-top:6px}
+button.ghost:hover{border-color:#9299a2}
+.key{font:15px 'DM Mono',Consolas,monospace;letter-spacing:1px;color:#c7f36a;word-break:break-all;background:#0a0b0e;border:1px solid #617d35;border-radius:8px;padding:9px;margin:6px 0;cursor:pointer;text-align:center}
+.row{display:flex;justify-content:space-between;align-items:center;margin:5px 0;font-size:13px}
+#st{color:#c7f36a;font-size:12px;min-height:16px;margin-top:6px}.ok{color:#c7f36a}.hidden{display:none}
+a.link{color:#c7f36a;font-size:12px;display:inline-block;margin-top:6px;cursor:pointer;text-decoration:none}
+hr{border:0;border-top:1px solid #292e36;margin:12px 0}
+#adm select,#adm input{background:#0a0b0e;border:1px solid #292e36;color:#f1f3ef;border-radius:6px;padding:5px;font-size:12px}
+#adm .urow{border:1px solid #292e36;border-radius:8px;padding:8px;margin:6px 0;font-size:12px}
+#adm button{width:auto;padding:4px 9px;font-size:12px;font-weight:400;border-radius:6px;border:1px solid #292e36;background:transparent;color:#f1f3ef}
 </style>
 <div class="card">
   <h1>FuckXiaoBaiHong <small>用户中心</small></h1>
@@ -32,7 +41,7 @@ a.link{color:#93c5fd;font-size:12px;display:inline-block;margin-top:4px;cursor:p
     <button id="payBtn" class="hidden" onclick="payIntent()">已付款，申请开通</button>
     <button class="ghost" onclick="logout()">退出</button>
     <p>密钥在软件里粘贴激活；一台机，换机先解绑。</p>
-    <hr style="border-color:#334155;margin:10px 0">
+    <hr style="border-color:#292e36;margin:12px 0">
     <button class="ghost hidden" id="admBtn" onclick="toggleAdm()">管理买家</button>
     <div id="adm" class="hidden"><div id="admList"></div><p>角色=user/vip/admin；admin 默认即 VIP。保存角色即生效，降级会自动吊销密钥。</p></div>
   </div>
@@ -85,12 +94,12 @@ async function admList(){
   const[ok,r,j]=await jr(API+'/admin/users',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});
   const box=document.getElementById('admList');
   if(!ok||!r.ok){box.innerHTML='<p>加载失败</p>';return}
-  box.innerHTML='<p style="color:#94a3b8">买家列表(最近 300)：</p>'+(j.users||[]).map(u=>
-    '<div style="border:1px solid #334155;border-radius:8px;padding:8px;margin:6px 0;font-size:12px">'+
-    '<div style="display:flex;justify-content:space-between"><b>'+esc(u.email||u.user_id)+'</b><span>'+esc(u.role)+'</span></div>'+
-    '<div style="color:#94a3b8;margin:2px 0">到期 '+esc(u.plan_expire_at?new Date(u.plan_expire_at*1000).toLocaleDateString():'永久')+
+  box.innerHTML='<p style="color:#9299a2;margin:4px 0">买家列表(最近 300)：</p>'+(j.users||[]).map(u=>
+    '<div class="urow">'+
+    '<div style="display:flex;justify-content:space-between"><b>'+esc(u.email||u.user_id)+'</b><span style="color:#c7f36a">'+esc(u.role)+'</span></div>'+
+    '<div style="color:#9299a2;margin:2px 0">到期 '+esc(u.plan_expire_at?new Date(u.plan_expire_at*1000).toLocaleDateString():'永久')+
     ' · 机器 '+u.machines+' · 密钥 …'+esc(u.key_tail||'')+'</div>'+
-    '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">'+
+    '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">'+
     '<select data-uid="'+esc(u.user_id)+'" data-role="1"><option>user</option><option>vip</option><option>admin</option></select>'+
     '<input data-uid="'+esc(u.user_id)+'" data-exp="1" placeholder="到期时间戳(空=永久)" style="width:130px;flex:1;min-width:100px">'+
     '<button onclick="admSave(\''+esc(u.user_id)+'\')">保存</button>'+
