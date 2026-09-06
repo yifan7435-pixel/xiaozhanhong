@@ -1,75 +1,77 @@
 <!doctype html><html lang="zh"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FuckXiaoBaiHong · 用户中心</title>
+<title>FuckXiaoBaiHong 用户中心</title>
 <style>
-body{font-family:'Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px;width:min(440px,92vw)}
-h1{font-size:20px;margin:0 0 4px} p{color:#94a3b8;font-size:13px;margin:4px 0}
-input{width:100%;box-sizing:border-box;padding:9px 10px;margin:6px 0;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0}
-button{width:100%;padding:10px;margin-top:8px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-size:15px;cursor:pointer}
-button.ghost{background:#334155;margin-top:4px} .key{font-family:Consolas,monospace;font-size:17px;letter-spacing:1px;color:#22d3ee;word-break:break-all}
-#st{color:#fbbf24;font-size:13px;margin-top:8px;min-height:18px} .ok{color:#4ade80}.hidden{display:none}
+*{box-sizing:border-box}body{font-family:'Microsoft YaHei',sans-serif;background:#0f172a;color:#e2e8f0;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:22px;width:min(360px,92vw)}
+h1{font-size:18px;margin:0 0 2px} h1 small{color:#64748b;font-weight:400;font-size:12px}
+p{margin:6px 0;color:#94a3b8;font-size:12px}
+input{width:100%;padding:8px 9px;margin:6px 0;border-radius:7px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:14px}
+button{width:100%;padding:9px;border:0;border-radius:7px;background:#2563eb;color:#fff;font-size:14px;cursor:pointer}
+button.ghost{background:#334155;margin-top:6px}
+.key{font:16px Consolas,monospace;letter-spacing:1px;color:#22d3ee;word-break:break-all;background:#0f172a;border:1px solid #334155;border-radius:7px;padding:8px;margin:6px 0;cursor:pointer;text-align:center}
+.row{display:flex;justify-content:space-between;align-items:center;margin:4px 0}
+#st{color:#fbbf24;font-size:12px;min-height:16px;margin-top:6px}.ok{color:#4ade80}.hidden{display:none}
+a.link{color:#93c5fd;font-size:12px;display:inline-block;margin-top:4px;cursor:pointer;text-decoration:none}
 </style>
 <div class="card">
-<h1>FuckXiaoBaiHong 用户中心</h1>
-<p>登录后查看/复制你的<b>专属授权密钥</b>，在软件里粘贴激活（绑 1 台，解绑冷却 3h）。</p>
-<div id="loginBox">
-  <input id="email" type="email" placeholder="邮箱" autocomplete="email">
-  <input id="pass" type="password" placeholder="密码" autocomplete="current-password">
-  <button onclick="auth('login')">登 录</button>
-  <button class="ghost" onclick="auth('signup')">没有账号？注册</button>
-</div>
-<div id="panel" class="hidden">
-  <div id="st"></div>
-  <p>状态：<b id="vip"></b> ｜ 到期：<b id="exp"></b></p>
-  <p>我的授权密钥：</p><p class="key" id="key"></p>
-  <button onclick="copyKey()">复制密钥</button>
-  <button class="ghost" id="payBtn" onclick="payIntent()">我已完成付款，帮我开通</button>
-  <p>已绑机器：<b id="mach"></b> 台（软件内可解绑）</p>
-  <button class="ghost" onclick="logout()">退出登录</button>
-</div>
+  <h1>FuckXiaoBaiHong <small>用户中心</small></h1>
+  <div id="login">
+    <input id="email" type="email" placeholder="邮箱" autocomplete="email">
+    <input id="pass" type="password" placeholder="密码" autocomplete="current-password">
+    <button onclick="doAuth('login')" id="btn1">登录</button>
+    <a class="link" onclick="toggleMode()" id="modeLink">没有账号？点此注册</a>
+    <div id="st"></div>
+  </div>
+  <div id="panel" class="hidden">
+    <div id="st2" class="ok"></div>
+    <div class="row"><span>状态</span><b id="vip"></b></div>
+    <div class="row"><span>到期</span><b id="exp"></b></div>
+    <div class="row"><span>已绑机器</span><b id="mach"></b></div>
+    <div id="keyWrap" class="hidden"><p>我的授权密钥（点击复制）：</p><div class="key" onclick="copyKey()" id="key"></div></div>
+    <button id="payBtn" class="hidden" onclick="payIntent()">已付款，申请开通</button>
+    <button class="ghost" onclick="logout()">退出</button>
+    <p>密钥在软件里粘贴激活；一台机，换机先解绑。</p>
+  </div>
 </div>
 <script>
 const SUP="https://obtkpflonqsexxwtybal.supabase.co";
-const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9idGtwZmxvbnFzZXh4d3R5YmFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NzU0ODksImV4cCI6MjEwNDI1MTQ4OX0.f0eWx65W_S9605WO8fVk_xH_ymvcGPsqqWvFZwJHawQ";
 const API="https://auth.matsci.top/api/v1/center";
-let TOKEN=localStorage.getItem("fxbh_tok")||"";
-async function jr(url,opt){const r=await fetch(url,opt);let j;try{j=await r.json()}catch(e){j={}};return{r,j}}
-async function auth(mode){
-  const email=document.getElementById('email').value.trim(), pass=document.getElementById('pass').value;
-  const st=document.getElementById('st'); st.className=''; st.textContent='处理中…';
-  const u=SUP+'/auth/v1/token?grant_type=password';
-  const su=SUP+'/auth/v1/signup';
-  const url=mode==='login'?u:su;
-  const body=mode==='login'?{email,password}:{email,password};
-  const {r,j}=await jr(url,{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok||!j.access_token){st.textContent='登录/注册失败：'+(j.msg||j.error_description||j.message||r.status);return}
-  TOKEN=j.access_token;localStorage.setItem('fxbh_tok',TOKEN);
-  if(j.user&&j.user.email_confirmed_at===null&&mode==='signup'){st.textContent='注册成功，请查收邮箱确认后再登录';return}
-  st.textContent='';show();
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9idGtwZmxvbnFzZXh4d3R5YmFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NzU0ODksImV4cCI6MjEwNDI1MTQ4OX0.f0eWx65W_S9605WO8fVk_xH_ymvcGPsqqWvFZwJHawQ";
+let TOKEN=localStorage.getItem("fxbh_tok")||"", mode="login";
+async function jr(u,o){try{const r=await fetch(u,o);return[true,r,await r.json()]}catch(e){return[false,null,{msg:String(e)}]}}
+function st(el,t,cls){el.textContent=t;el.className=cls||""}
+async function doAuth(){
+  const email=document.getElementById('email').value.trim(),pass=document.getElementById('pass').value;
+  const box=document.getElementById('st');
+  if(!email||!pass){st(box,'请填邮箱和密码');return}
+  st(box,'处理中…');document.getElementById('btn1').disabled=true;
+  const u=(mode==='login'?SUP+'/auth/v1/token?grant_type=password':SUP+'/auth/v1/signup');
+  const[ok,r,j]=await jr(u,{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  document.getElementById('btn1').disabled=false;
+  if(!ok||!r.ok){st(box,'失败：'+(j.msg||j.error_description||j.message||'网络错误'));return}
+  if(mode==='signup'){if(j.user&&j.user.email_confirmed_at===null){st(box,'注册成功，去邮箱点确认链接后再登录');document.getElementById('pass').value='';return}}
+  TOKEN=j.access_token;localStorage.setItem('fxbh_tok',TOKEN);show();
 }
 function hdr(){return{apikey:ANON,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}}
+function toggleMode(){mode=mode==='login'?'signup':'login';document.getElementById('modeLink').textContent=mode==='login'?'没有账号？点此注册':'已有账号？去登录';document.getElementById('btn1').textContent=mode==='login'?'登录':'注册'}
 async function show(){
-  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('login').classList.add('hidden');
   document.getElementById('panel').classList.remove('hidden');
-  const {r,j}=await jr(API+'/status',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});
-  const st=document.getElementById('st');
-  if(!r.ok){st.className='';st.textContent='状态获取失败：'+(j.detail&&j.detail.detail||j.detail||r.status);return}
+  const[ok,r,j]=await jr(API+'/status',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});
+  const box=document.getElementById('st2');
+  if(!ok||!r.ok){st(box,'状态获取失败：'+(j.detail&&j.detail.detail||j.detail||'网络错误'));return}
+  st(box, j.is_vip?'已开通':'待开通', j.is_vip?'ok':'');
   document.getElementById('vip').textContent=j.is_vip?'VIP ✅':'非 VIP';
   document.getElementById('vip').style.color=j.is_vip?'#4ade80':'#f87171';
   document.getElementById('exp').textContent=j.plan_expire_at?new Date(j.plan_expire_at*1000).toLocaleDateString():'永久';
-  document.getElementById('mach').textContent=j.machines;
-  if(j.is_vip&&j.key){document.getElementById('key').textContent=j.key;st.className='ok';st.textContent='已在授权状态；若换机请先在软件里解绑旧机';}
-  else{document.getElementById('key').textContent='——';}
-  document.getElementById('payBtn').classList.toggle('hidden',!!(j.is_vip&&j.key));
+  document.getElementById('mach').textContent=j.machines+' 台';
+  const kw=document.getElementById('keyWrap'),pb=document.getElementById('payBtn');
+  if(j.is_vip&&j.key){kw.classList.remove('hidden');document.getElementById('key').textContent=j.key;pb.classList.add('hidden');st(box,'已开通：换机请先在软件解绑旧机','ok')}
+  else{kw.classList.add('hidden');pb.classList.remove('hidden')}
 }
-async function payIntent(){
-  const st=document.getElementById('st');st.className='';st.textContent='已登记，请告知卖家(订单号:你的邮箱)完成确认…';
-  const {r,j}=await jr(API+'/pay-intent',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});
-  if(r.ok){st.textContent='已提交开通申请。卖家确认到账后将在此页显示你的专属密钥。'}
-  else{st.className='';st.textContent='提交失败：'+(j.detail&&j.detail.detail||j.detail||r.status)}
-}
-function copyKey(){const k=document.getElementById('key').textContent;navigator.clipboard.writeText(k);document.getElementById('st').className='ok';document.getElementById('st').textContent='密钥已复制，去软件粘贴激活';}
+async function payIntent(){const b=document.getElementById('st2');st(b,'已登记，请联系卖家确认付款…');const[ok,r]=await jr(API+'/pay-intent',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});st(b,ok&&r.ok?'已提交开通申请，卖家确认后密钥会显示在此':'提交失败，请重试',ok&&r.ok?'ok':'')}
+function copyKey(){navigator.clipboard.writeText(document.getElementById('key').textContent);const b=document.getElementById('st2');st(b,'密钥已复制，去软件粘贴激活','ok')}
 function logout(){TOKEN='';localStorage.removeItem('fxbh_tok');location.reload()}
 if(TOKEN)show();
 </script>
