@@ -51,7 +51,7 @@ const SUP="https://obtkpflonqsexxwtybal.supabase.co";
 const API="https://auth.matsci.top/api/v1/center";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9idGtwZmxvbnFzZXh4d3R5YmFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NzU0ODksImV4cCI6MjEwNDI1MTQ4OX0.f0eWx65W_S9605WO8fVk_xH_ymvcGPsqqWvFZwJHawQ";
 let TOKEN=localStorage.getItem("fxbh_tok")||"", mode="login";
-async function jr(u,o){try{const r=await fetch(u,o);return[true,r,await r.json()]}catch(e){return[false,null,{msg:String(e)}]}}
+async function jr(u,o){const c=new AbortController();const t=setTimeout(()=>c.abort(),20000);o.signal=c.signal;try{const r=await fetch(u,o);clearTimeout(t);let j;try{j=await r.json()}catch(e){j={}}return[true,r,j]}catch(e){clearTimeout(t);return[false,null,{msg:e&&e.name==='AbortError'?'请求超时(网络慢/被拦)':'网络错误: '+e}]}}
 function st(el,t,cls){el.textContent=t;el.className=cls||""}
 async function doAuth(){
   const email=document.getElementById('email').value.trim(),pass=document.getElementById('pass').value;

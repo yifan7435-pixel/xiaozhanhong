@@ -12,3 +12,9 @@
 .head-login:hover{background:#c7f36a;color:#10130b;border-color:#c7f36a}
 .head-login:visited,.head-login:link{color:#f1f3ef}
 
+
+/* visited 统一配色: 防浏览器默认紫色 */
+.header nav a:visited,.footer-links a:visited{color:#9299a2}
+.ghost:visited{color:#f1f3ef}
+.header nav a:visited:hover,.footer-links a:visited:hover{color:#c7f36a}
+
