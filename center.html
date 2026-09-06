@@ -58,11 +58,14 @@ async function doAuth(){
   const box=document.getElementById('st');
   if(!email||!pass){st(box,'请填邮箱和密码');return}
   st(box,'处理中…');document.getElementById('btn1').disabled=true;
-  const u=(mode==='login'?SUP+'/auth/v1/token?grant_type=password':SUP+'/auth/v1/signup');
-  const[ok,r,j]=await jr(u,{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  // 登录/注册走本站中转(不直连 Supabase): 链路短、错误明确
+  const u=(mode==='login'?API+'/login':API+'/signup');
+  const[ok,r,j]=await jr(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
   document.getElementById('btn1').disabled=false;
-  if(!ok||!r.ok){st(box,'失败：'+(j.msg||j.error_description||j.message||'网络错误'));return}
-  if(mode==='signup'){if(j.user&&j.user.email_confirmed_at===null){st(box,'注册成功，去邮箱点确认链接后再登录');document.getElementById('pass').value='';return}}
+  const de=(j&&j.detail)?(j.detail.detail||j.detail):null;
+  if(!ok||!r.ok){st(box,'失败：'+(de||j.msg||'网络错误/服务器无响应'));return}
+  if(mode==='signup'&&j.needs_confirm){st(box,'注册成功，去邮箱点确认链接后再登录');document.getElementById('pass').value='';return}
+  if(!j.access_token){st(box,'未返回登录态：'+(de||'请重试'));return}
   TOKEN=j.access_token;localStorage.setItem('fxbh_tok',TOKEN);show();
 }
 function hdr(){return{apikey:ANON,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}}
