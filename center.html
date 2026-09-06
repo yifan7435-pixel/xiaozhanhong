@@ -32,6 +32,9 @@ a.link{color:#93c5fd;font-size:12px;display:inline-block;margin-top:4px;cursor:p
     <button id="payBtn" class="hidden" onclick="payIntent()">已付款，申请开通</button>
     <button class="ghost" onclick="logout()">退出</button>
     <p>密钥在软件里粘贴激活；一台机，换机先解绑。</p>
+    <hr style="border-color:#334155;margin:10px 0">
+    <button class="ghost hidden" id="admBtn" onclick="toggleAdm()">管理买家</button>
+    <div id="adm" class="hidden"><div id="admList"></div><p>角色=user/vip/admin；admin 默认即 VIP。保存角色即生效，降级会自动吊销密钥。</p></div>
   </div>
 </div>
 <script>
@@ -69,9 +72,36 @@ async function show(){
   const kw=document.getElementById('keyWrap'),pb=document.getElementById('payBtn');
   if(j.is_vip&&j.key){kw.classList.remove('hidden');document.getElementById('key').textContent=j.key;pb.classList.add('hidden');st(box,'已开通：换机请先在软件解绑旧机','ok')}
   else{kw.classList.add('hidden');pb.classList.remove('hidden')}
+  ROLE=j.role||'user';
+  document.getElementById('admBtn').classList.toggle('hidden',ROLE!=='admin');
 }
 async function payIntent(){const b=document.getElementById('st2');st(b,'已登记，请联系卖家确认付款…');const[ok,r]=await jr(API+'/pay-intent',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});st(b,ok&&r.ok?'已提交开通申请，卖家确认后密钥会显示在此':'提交失败，请重试',ok&&r.ok?'ok':'')}
 function copyKey(){navigator.clipboard.writeText(document.getElementById('key').textContent);const b=document.getElementById('st2');st(b,'密钥已复制，去软件粘贴激活','ok')}
 function logout(){TOKEN='';localStorage.removeItem('fxbh_tok');location.reload()}
+let ROLE='user';
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function toggleAdm(){const a=document.getElementById('adm');a.classList.toggle('hidden');if(!a.classList.contains('hidden'))await admList()}
+async function admList(){
+  const[ok,r,j]=await jr(API+'/admin/users',{method:'POST',headers:hdr(),body:JSON.stringify({jwt:TOKEN})});
+  const box=document.getElementById('admList');
+  if(!ok||!r.ok){box.innerHTML='<p>加载失败</p>';return}
+  box.innerHTML='<p style="color:#94a3b8">买家列表(最近 300)：</p>'+(j.users||[]).map(u=>
+    '<div style="border:1px solid #334155;border-radius:8px;padding:8px;margin:6px 0;font-size:12px">'+
+    '<div style="display:flex;justify-content:space-between"><b>'+esc(u.email||u.user_id)+'</b><span>'+esc(u.role)+'</span></div>'+
+    '<div style="color:#94a3b8;margin:2px 0">到期 '+esc(u.plan_expire_at?new Date(u.plan_expire_at*1000).toLocaleDateString():'永久')+
+    ' · 机器 '+u.machines+' · 密钥 …'+esc(u.key_tail||'')+'</div>'+
+    '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">'+
+    '<select data-uid="'+esc(u.user_id)+'" data-role="1"><option>user</option><option>vip</option><option>admin</option></select>'+
+    '<input data-uid="'+esc(u.user_id)+'" data-exp="1" placeholder="到期时间戳(空=永久)" style="width:130px;flex:1;min-width:100px">'+
+    '<button onclick="admSave(\''+esc(u.user_id)+'\')">保存</button>'+
+    '<button onclick="admKey(\''+esc(u.user_id)+'\')">发钥</button>'+
+    '<button onclick="admRevoke(\''+esc(u.user_id)+'\')">吊销</button>'+
+    '</div></div>').join('');
+  (j.users||[]).forEach(u=>{const s=box.querySelector('select[data-uid="'+esc(u.user_id)+'"]');if(s)s.value=u.role});
+}
+async function admCall(path,payload){return jr(API+'/admin/'+path,{method:'POST',headers:hdr(),body:JSON.stringify(Object.assign({jwt:TOKEN},payload))})}
+async function admSave(uid){const row=document.querySelector('[data-uid="'+esc(uid)+'"][data-role]');const exp=document.querySelector('[data-uid="'+esc(uid)+'"][data-exp]');const role=row?row.value:'user';const expv=parseFloat(exp&&exp.value?exp.value:0);const[ok,r]=await admCall('upsert',{user_id:uid,role:role,plan_expire_at:isNaN(expv)?0:expv});st(document.getElementById('st2'),ok&&r.ok?'已保存':'保存失败',ok&&r.ok?'ok':'');admList()}
+async function admKey(uid){const[ok,r,j]=await admCall('issue-key',{user_id:uid});if(ok&&r.ok&&r.key){st(document.getElementById('st2'),'密钥：'+r.key,'ok')}else{st(document.getElementById('st2'),'发钥失败：先设 vip/admin','')}}
+async function admRevoke(uid){if(!confirm('吊销该用户密钥并作废其会话？'))return;const[ok,r]=await admCall('revoke-key',{user_id:uid});st(document.getElementById('st2'),ok&&r.ok?'已吊销':'吊销失败',ok&&r.ok?'ok':'');admList()}
 if(TOKEN)show();
 </script>
